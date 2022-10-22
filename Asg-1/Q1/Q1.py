@@ -8,9 +8,32 @@ def clean_data(line):
 def read_input(filename):
     with open(filename, 'r') as f:
         input_data = f.readlines()
+
+        ''' Remove END OF INPUT line '''
+        input_data.pop()
+
         clean_input = list(map(clean_data, input_data))
         f.close()
     return clean_input
+
+
+def organise_map(input_data):
+    d = {}
+
+    for record in input_data:
+        first_city, second_city, distance = record[0], record[1], float(record[2])
+
+        if first_city in d:
+            d[first_city].append([second_city, distance])
+        else:
+            d[first_city] = [[second_city, distance]]
+
+        if second_city in d:
+            d[second_city].append([first_city, distance])
+        else:
+            d[second_city] = [[first_city, distance]]
+
+    return d
 
 
 def main():
@@ -26,6 +49,8 @@ def main():
     destination = 'Kassel'
 
     input_data = read_input(input_filename)
+
+    map_dict = organise_map(input_data)
 
     if len(sys.argv) == 4:
         '''Uninformed Search'''
