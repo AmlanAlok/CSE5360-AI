@@ -69,10 +69,10 @@ def update_board(board, game_state, player, chosen_col_idx, score_dict):
         if player == 'Human':
             print('Column =', chosen_col_idx + 1, 'is filled. Choose another col.')
             human_col = human_player_turn()
-            return update_board(board, game_state, 'Human', human_col)
+            return update_board(board, game_state, 'Human', human_col, score_dict)
         elif player == 'Computer':
             computer_col = computer_player_turn()
-            return update_board(board, game_state, 'Computer', computer_col)
+            return update_board(board, game_state, 'Computer', computer_col, score_dict)
 
     return board, game_state, score_dict
 
@@ -92,13 +92,10 @@ def connect_4(r, c, token, board, count=0, r_limit=6, c_limit=7):
 
         horizontal = horizontal_count(r, c, c_limit, token, board)
         vertical = vertical_count(r, c, r_limit, token, board)
+        left_diag = left_diagonal(r, c, r_limit, c_limit, token, board)
+        right_diag = right_diagonal(r, c, r_limit, c_limit, token, board)
 
-        # horizontal_right = connect_4(r, c + 1, token, board, count)
-        # horizontal_left = connect_4(r, c - 1, token, board, count)
-        #
-        # horizontal_total = horizontal_left + horizontal_right
-
-        return horizontal or vertical
+        return horizontal or vertical or left_diag or right_diag
     else:
         return False
 
