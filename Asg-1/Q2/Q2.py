@@ -103,6 +103,54 @@ def connect_4(r, c, token, board, count=0, r_limit=6, c_limit=7):
         return False
 
 
+def left_diagonal(r, c, r_limit, c_limit, token, board):
+    count = 0
+    i, j = r, c
+    while i < r_limit and 0 <= j:
+        if board[i][j] == token:
+            count += 1
+            i += 1
+            j -= 1
+        else:
+            break
+    i, j = r, c
+    i -= 1
+    j += 1
+    while 0 <= i and j < c_limit:
+        if board[i][j] == token:
+            count += 1
+            i -= 1
+            j += 1
+        else:
+            break
+
+    return count >= 4
+
+
+def right_diagonal(r, c, r_limit, c_limit, token, board):
+    count = 0
+    i, j = r, c
+    while i < r_limit and j < c_limit:
+        if board[i][j] == token:
+            count += 1
+            i += 1
+            j += 1
+        else:
+            break
+    i, j = r, c
+    i -= 1
+    j -= 1
+    while 0 <= i and 0 <= j:
+        if board[i][j] == token:
+            count += 1
+            i -= 1
+            j -= 1
+        else:
+            break
+
+    return count >= 4
+
+
 def vertical_count(r, c, r_limit, token, board):
     count = 0
     i = r
@@ -120,7 +168,7 @@ def vertical_count(r, c, r_limit, token, board):
             j -= 1
         else:
             break
-    return count == 4
+    return count >= 4
 
 
 def horizontal_count(r, c, c_limit, token, board):
@@ -140,7 +188,7 @@ def horizontal_count(r, c, c_limit, token, board):
         else:
             break
 
-    return count == 4
+    return count >= 4
 
 
 def main():
