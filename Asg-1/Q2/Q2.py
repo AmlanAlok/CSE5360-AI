@@ -1,8 +1,12 @@
 from random import randint
+import sys, os
+
+HUMAN = 'Human'
+COMPUTER = 'Computer'
 
 
-def get_fresh_board():
-    game_board = [[0] * 7 for i in range(6)]
+def get_fresh_board(rows, columns):
+    game_board = [[0] * columns for i in range(rows)]
 
     game_state = {}
 
@@ -14,10 +18,11 @@ def get_fresh_board():
     return game_board, game_state
 
 
-def display_game(game):
+def display_game(game, score_dict):
     print('--------------------\n')
     for arr in reversed(game):
         print(arr)
+    print(score_dict)
     print('\n--------------------\n')
 
 
@@ -38,13 +43,17 @@ def computer_player_turn():
         exit(0)
 
 
+def init_scores():
+    d = {'Human': 0, 'Computer': 0}
+    return d
 
-def update_board(board, game_state, player, chosen_col_idx):
+
+def update_board(board, game_state, player, chosen_col_idx, score_dict):
     max_row_idx = 5
 
-    if player == 'Human':
+    if player == HUMAN:
         token = 1
-    if player == 'Computer':
+    if player == COMPUTER:
         token = 2
 
     row_idx = game_state[chosen_col_idx]
@@ -53,6 +62,9 @@ def update_board(board, game_state, player, chosen_col_idx):
         board[row_idx][chosen_col_idx] = token
         game_state[chosen_col_idx] += 1
         game_state['holes_left'] -= 1
+
+        if connect_4(row_idx, chosen_col_idx, token, board):
+            score_dict[player] += 1
     else:
         if player == 'Human':
             print('Column =', chosen_col_idx + 1, 'is filled. Choose another col.')
@@ -62,22 +74,89 @@ def update_board(board, game_state, player, chosen_col_idx):
             computer_col = computer_player_turn()
             return update_board(board, game_state, 'Computer', computer_col)
 
-    return board, game_state
+    return board, game_state, score_dict
+
+
+'''
+Checks for 4 consecutive tokens along:
+1. Horizontal
+2. Vertical
+3. Right Diagonal
+4. left Diagonal
+'''
+
+
+def connect_4(r, c, token, board, count=0, r_limit=6, c_limit=7):
+    if r < r_limit and c < c_limit and board[r][c] == token:
+        count += 1
+
+        horizontal = horizontal_count(r, c, c_limit, token, board)
+        vertical = vertical_count(r, c, r_limit, token, board)
+
+        # horizontal_right = connect_4(r, c + 1, token, board, count)
+        # horizontal_left = connect_4(r, c - 1, token, board, count)
+        #
+        # horizontal_total = horizontal_left + horizontal_right
+
+        return horizontal or vertical
+    else:
+        return False
+
+
+def vertical_count(r, c, r_limit, token, board):
+    count = 0
+    i = r
+
+    while i < r_limit:
+        if board[i][c] == token:
+            count += 1
+            i += 1
+        else:
+            break
+    j = r - 1
+    while 0 <= j:
+        if board[j][c] == token:
+            count += 1
+            j -= 1
+        else:
+            break
+    return count == 4
+
+
+def horizontal_count(r, c, c_limit, token, board):
+    count = 0
+    i = c
+    while i < c_limit:
+        if board[r][i] == token:
+            count += 1
+            i += 1
+        else:
+            break
+    j = c - 1
+    while 0 <= j:
+        if board[r][j] == token:
+            count += 1
+            j -= 1
+        else:
+            break
+
+    return count == 4
 
 
 def main():
     print('Q2 --')
-    board, game_state = get_fresh_board()
+    board, game_state = get_fresh_board(6, 7)
     print('New Game')
-    display_game(board)
+    score_dict = init_scores()
+    display_game(board, score_dict)
 
     while game_state['holes_left'] > 0:
         human_col = human_player_turn()
-        board, game_state = update_board(board, game_state, 'Human', human_col)
+        board, game_state, score_dict = update_board(board, game_state, HUMAN, human_col, score_dict)
         # display_game(board)
         computer_col = computer_player_turn()
-        board, game_state = update_board(board, game_state, 'Computer', computer_col)
-        display_game(board)
+        board, game_state, score_dict = update_board(board, game_state, COMPUTER, computer_col, score_dict)
+        display_game(board, score_dict)
     print('END')
 
 
