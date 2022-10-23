@@ -114,61 +114,44 @@ def route_tracker(route_traversed, origin, curr_fringe_element):
 
 def uniform_cost_search(origin, destination, map_dict):
     fringe = deque()
-    # fringe.append([origin, 0.0, ''])
     fringe.append({FROM: '',
                    TO: origin,
                    DISTANCE: 0.0})
 
-    visited = []
-    route_traversed = []
-    expanded_arr = []
-    popped = 0
-    generated = 0
-    expanded = 0
-
-    route_stack = deque()
+    visited, route_traversed, expanded_arr = [], [], []
+    popped, generated, expanded = 0, 0, 0
 
     while len(fringe) > 0:
         fringe_element = fringe.popleft()
         current_location = fringe_element[TO]
         popped += 1
-        # route_traversed.append(current_location)
-        # route_traversed.append(fringe_element)
 
         if current_location not in visited:
             route_traversed.append(fringe_element)
             visited.append(current_location)
 
-            # if len(route_stack) > 1:
-            #     if fringe_element[TO] == route_stack[-1][FROM]:
-            #         route_stack.pop()
-            #     else:
-            #         route_stack.append(fringe_element)
-            # else:
-            #     route_stack.append(fringe_element)
-
             if current_location == destination:
-                print('Found :', destination)
-                x, total_distance = route_tracker(route_traversed, origin, fringe_element)
-                # print('Route =', route_traversed)
+                route_path, total_distance = route_tracker(route_traversed, origin, fringe_element)
                 print('Nodes Popped:', popped)
                 print('Nodes Expanded:', expanded)
                 print('Nodes Generated:', generated)
                 print('Distance:', total_distance, ' km')
-
-                break
+                for i in range(len(route_path)-1, -1, -1):
+                    arr = route_path[i]
+                    print(arr[FROM], 'to', arr[TO], ',', arr[DISTANCE], 'km')
+                return
 
             successors = map_dict[current_location]
             generated += len(successors)
             fringe = add_successors_to_fringe(fringe, successors)
             expanded += 1
             expanded_arr.append(current_location)
-        # else:
-        #     if len(route_stack) > 1:
-        #         if fringe_element[TO] == route_stack[-1][FROM]:
-        #             route_stack.pop()
 
-    print('ucs')
+    print('Nodes Popped:', popped)
+    print('Nodes Expanded:', expanded)
+    print('Nodes Generated:', generated)
+    print('Distance: infinity')
+    print('Route:\nNone')
 
 
 def main():
@@ -180,7 +163,9 @@ def main():
     # destination = sys.argv[3]
 
     input_filename = 'input1.txt'
-    origin = 'Bremen'
+    # origin = 'Bremen'
+    # destination = 'Kassel'
+    origin = 'London'
     destination = 'Kassel'
 
     input_data = read_input(input_filename)
@@ -191,6 +176,7 @@ def main():
 
     # if len(sys.argv) == 4:
     #     '''Uninformed Search'''
+    #     uniform_cost_search(origin, destination, map_dict)
     #
     # elif len(sys.argv) == 5:
     #     '''Informed Search'''
