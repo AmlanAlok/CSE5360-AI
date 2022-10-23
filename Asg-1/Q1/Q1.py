@@ -46,53 +46,11 @@ def add_successors_to_fringe(fringe, successors):
         return t[DISTANCE]
 
     for arr in successors:
-        # fringe.append(arr)
         fringe.append({FROM: arr[2],
                        TO: arr[0],
                        DISTANCE: arr[1]})
 
     return deque(sorted(fringe, key=key_col_value))
-
-
-def uniform_cost_search_2(origin, destination, map_dict):
-    fringe = deque()
-    fringe.append([origin, 0.0, ''])
-
-    visited = []
-    route_traversed = []
-    expanded_arr = []
-    popped = 0
-    generated = 0
-    expanded = 0
-
-    route_stack = deque()
-
-    while len(fringe) > 0:
-        fringe_element = fringe.popleft()
-        current_location = fringe_element[0]
-        popped += 1
-        route_traversed.append(current_location)
-
-        if current_location not in visited:
-
-            visited.append(current_location)
-
-            if current_location == destination:
-                print('Found :', destination)
-                # print('Route =', route_traversed)
-                print('Nodes Popped:', popped)
-                print('Nodes Expanded:', expanded)
-                print('Nodes Generated:', generated)
-                print('Distance:')
-                break
-
-            successors = map_dict[current_location]
-            generated += len(successors)
-            fringe = add_successors_to_fringe(fringe, successors)
-            expanded += 1
-            expanded_arr.append(current_location)
-
-    print('ucs')
 
 
 def route_tracker(route_traversed, origin, curr_fringe_element):
@@ -136,7 +94,7 @@ def uniform_cost_search(origin, destination, map_dict):
                 print('Nodes Expanded:', expanded)
                 print('Nodes Generated:', generated)
                 print('Distance:', total_distance, ' km')
-                for i in range(len(route_path)-1, -1, -1):
+                for i in range(len(route_path) - 1, -1, -1):
                     arr = route_path[i]
                     print(arr[FROM], 'to', arr[TO], ',', arr[DISTANCE], 'km')
                 return
