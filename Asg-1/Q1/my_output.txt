@@ -1,0 +1,46 @@
+
+-------------------
+Uniform Cost Search
+-------------------
+
+Bremen -> Kassel
+----------------
+Nodes Popped: 16
+Nodes Expanded: 7
+Nodes Generated: 21
+Distance: 297.0  km
+Bremen to Hannover , 132.0 km
+Hannover to Kassel , 165.0 km
+
+London -> Kassel
+----------------
+Nodes Popped: 7
+Nodes Expanded: 4
+Nodes Generated: 7
+Distance: infinity
+Route:
+None
+
+
+----------------
+A* Search
+----------------
+
+Bremen -> Kassel
+----------------
+Nodes Popped: 3
+Nodes Expanded: 2
+Nodes Generated: 8
+Distance: 297.0  km
+Bremen to Hannover , 132.0 km
+Hannover to Kassel , 165.0 km
+
+
+London -> Kassel
+----------------
+Nodes Popped: 7
+Nodes Expanded: 4
+Nodes Generated: 7
+Distance: infinity
+Route:
+None
