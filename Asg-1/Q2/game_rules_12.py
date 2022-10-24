@@ -20,9 +20,13 @@ def score_calculation(r, c, token_dict, board, score, hypothetical_game_state, r
     is_3, score_3 = line_of_3(r, c, token_dict[COMPUTER], board, SCORE_LINE_OF_3_1_SIDE, hypothetical_game_state)
     is_4, score_4 = connect_4(r, c, token_dict[COMPUTER], board, SCORE_CONNECT_4)
 
+    board[r][c] = token_dict[HUMAN]
+
     opponent_2, oppo_2 = line_of_2(r, c, token_dict[HUMAN], board, SCORE_LINE_OF_2_OPPONENT, hypothetical_game_state)
     opponent_3, oppo_3 = line_of_3(r, c, token_dict[HUMAN], board, SCORE_LINE_OF_3_OPPONENT, hypothetical_game_state)
-    opponent_4, oppo_4 = connect_4(r, c, token_dict[COMPUTER], board, SCORE_LINE_OF_4_OPPONENT)
+    opponent_4, oppo_4 = connect_4(r, c, token_dict[HUMAN], board, SCORE_LINE_OF_4_OPPONENT)
+
+    board[r][c] = token_dict[COMPUTER]
 
     if c == m.floor(c_limit / 2) and r == 0:
         score += SCORE_CENTER_COL
@@ -359,26 +363,26 @@ def connect_4(r, c, token, board, score_4, count=0, r_limit=6, c_limit=7):
     # else:
     #     return False
     score = 0
-    if r < r_limit and c < c_limit and board[r][c] == token:
-        horizontal, h_score = horizontal_count(r, c, c_limit, token, board, score_4)
-        vertical, v_score = vertical_count(r, c, r_limit, token, board, score_4)
-        left_diag, ld_score = left_diagonal(r, c, r_limit, c_limit, token, board, score_4)
-        right_diag, rd_score = right_diagonal(r, c, r_limit, c_limit, token, board, score_4)
+    # if r < r_limit and c < c_limit and board[r][c] == token:
+    horizontal, h_score = horizontal_count(r, c, c_limit, token, board, score_4)
+    vertical, v_score = vertical_count(r, c, r_limit, token, board, score_4)
+    left_diag, ld_score = left_diagonal(r, c, r_limit, c_limit, token, board, score_4)
+    right_diag, rd_score = right_diagonal(r, c, r_limit, c_limit, token, board, score_4)
 
-        if horizontal:
-            score += h_score
-        if vertical:
-            score += v_score
-        if left_diag:
-            score += ld_score
-        if right_diag:
-            score += rd_score
+    if horizontal:
+        score += h_score
+    if vertical:
+        score += v_score
+    if left_diag:
+        score += ld_score
+    if right_diag:
+        score += rd_score
 
-        if score == 0:
-            return False, 0
-        return True, score
-    else:
-        return False
+    if score == 0:
+        return False, 0
+    return True, score
+    # else:
+    #     return False, score
 
 
 def left_diagonal(r, c, r_limit, c_limit, token, board, score_4):
