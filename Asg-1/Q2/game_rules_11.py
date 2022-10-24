@@ -340,7 +340,7 @@ Checks for 4 consecutive tokens along:
 '''
 
 
-def connect_4(r, c, token, board, score_4=SCORE_CONNECT_4, count=0, r_limit=6, c_limit=7):
+def connect_4(r, c, token, board, score_4, count=0, r_limit=6, c_limit=7):
     # if r < r_limit and c < c_limit and board[r][c] == token:
     #     count += 1
     #
@@ -353,24 +353,26 @@ def connect_4(r, c, token, board, score_4=SCORE_CONNECT_4, count=0, r_limit=6, c
     # else:
     #     return False
     score = 0
+    if r < r_limit and c < c_limit and board[r][c] == token:
+        horizontal, h_score = horizontal_count(r, c, c_limit, token, board, score_4)
+        vertical, v_score = vertical_count(r, c, r_limit, token, board, score_4)
+        left_diag, ld_score = left_diagonal(r, c, r_limit, c_limit, token, board, score_4)
+        right_diag, rd_score = right_diagonal(r, c, r_limit, c_limit, token, board, score_4)
 
-    horizontal, h_score = horizontal_count(r, c, c_limit, token, board, score_4)
-    vertical, v_score = vertical_count(r, c, r_limit, token, board, score_4)
-    left_diag, ld_score = left_diagonal(r, c, r_limit, c_limit, token, board, score_4)
-    right_diag, rd_score = right_diagonal(r, c, r_limit, c_limit, token, board, score_4)
+        if horizontal:
+            score += h_score
+        if vertical:
+            score += v_score
+        if left_diag:
+            score += ld_score
+        if right_diag:
+            score += rd_score
 
-    if horizontal:
-        score += h_score
-    if vertical:
-        score += v_score
-    if left_diag:
-        score += ld_score
-    if right_diag:
-        score += rd_score
-
-    if score == 0:
-        return False, 0
-    return True, score
+        if score == 0:
+            return False, 0
+        return True, score
+    else:
+        return False
 
 
 def left_diagonal(r, c, r_limit, c_limit, token, board, score_4):
