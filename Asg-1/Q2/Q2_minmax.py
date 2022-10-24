@@ -5,7 +5,7 @@ from game_rules import *
 
 HUMAN = 'Human'
 COMPUTER = 'Computer'
-
+TOKEN_DICT = {'Blank': 0, HUMAN: 1, COMPUTER: 2}
 
 def get_fresh_board(rows, columns):
     game_board = [[0] * columns for i in range(rows)]
@@ -82,13 +82,13 @@ def update_board(board, game_state, player, chosen_col_idx, score_dict):
 
 
 
-def computer_player_turn(board, game_state, token):
+def computer_player_turn(board, game_state, token_dict):
     rows, cols = len(board), len(board[0])
     max_row_idx = rows-1
     pos_score_arr = [None] * cols
 
     for col_idx in range(cols):
-        score = position_score(board, game_state, col_idx, max_row_idx, token)
+        score = position_score(board, game_state, col_idx, max_row_idx, token_dict)
         pos_score_arr.append(score)
     print('final')
 
@@ -105,7 +105,7 @@ def main():
         human_col = 3  # for debug purpose
         board, game_state, score_dict = update_board(board, game_state, HUMAN, human_col, score_dict)
         # display_game(board)
-        computer_col = computer_player_turn(board, game_state)
+        computer_col = computer_player_turn(board, game_state, TOKEN_DICT)
         board, game_state, score_dict = update_board(board, game_state, COMPUTER, computer_col, score_dict)
         display_game(board, score_dict)
 
