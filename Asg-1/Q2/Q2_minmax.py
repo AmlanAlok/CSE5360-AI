@@ -178,18 +178,41 @@ def create_game_board(rows, columns, input_data):
 
 
 def one_move_mode():
-    filename = 'input2.txt'
+    filename = 'input3.txt'
     input_data, next_player_token = read_input(filename)
     board, game_state = create_game_board(6, 7, input_data)
     score_dict = init_scores()
     display_game(board, score_dict)
+
+    turn = next_player_token
+    p = 0
+    while p < 2:
+        if turn == 1:
+            human_col = human_player_turn()
+            # human_col = computer_player_turn_random()  # for debug purpose
+            board, game_state, score_dict = update_board(board, game_state, HUMAN, human_col, score_dict)
+
+            turn = 2
+        if turn == 2:
+            computer_col = computer_player_turn(board, game_state, TOKEN_DICT)
+            board, game_state, score_dict = update_board(board, game_state, COMPUTER, computer_col, score_dict)
+            turn = 1
+        display_game(board, score_dict)
+        p+=1
+
+    if score_dict[HUMAN] > score_dict[COMPUTER]:
+        print('YOU WIN')
+    elif score_dict[HUMAN] < score_dict[COMPUTER]:
+        print('YOU LOSE')
+    else:
+        print('DRAW')
     print('END')
 
 
 def main():
     print('Q2 --')
-    one_move_mode()
-    # interactive_mode()
+    # one_move_mode()
+    interactive_mode()
 
 
 if __name__ == "__main__":
