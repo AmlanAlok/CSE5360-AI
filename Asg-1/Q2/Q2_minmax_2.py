@@ -2,7 +2,7 @@ from random import randint
 import sys, os
 import math as m
 # from game_rules import *
-from game_rules_12 import *
+from game_rules_21 import *
 
 HUMAN = 'Human'
 COMPUTER = 'Computer'
@@ -88,28 +88,111 @@ def update_board(board, game_state, player, chosen_col_idx, score_dict):
 
 
 def computer_player_turn(board, game_state, token_dict):
+    max_depth = 2
+    alpha, beta = -sys.maxsize, sys.maxsize
+    hypothetical_board = [[0] * 7 for i in range(6)]
+
+    for r in range(6):
+        for c in range(7):
+            hypothetical_board[r][c] = board[r][c]
+
+    hypothetical_game_state = game_state.copy()
+
+    best_pos, score = minmax(hypothetical_board, hypothetical_game_state, token_dict, 0, max_depth, COMPUTER, alpha,
+                             beta)
+    return best_pos, game_state
+
+
+'''Min Max Algo implemented'''
+
+
+def minmax(board, game_state, token_dict, depth, max_depth, player, alpha, beta, row_idx=None, col_idx=None):
     rows, cols = len(board), len(board[0])
     max_row_idx = rows - 1
-    pos_score_arr = [None] * cols
+    pos_score_arr = [0] * cols
 
-    for col_idx in range(cols):
-        score = position_score(board, game_state, col_idx, max_row_idx, token_dict)
-        pos_score_arr[col_idx] = score
+    ''' Depth Limiting '''
+    if depth == max_depth:
+        # return -1, position_score(board, game_state, row_idx, col_idx, max_row_idx, token_dict, player)
+        return -1, 0
 
-    max_score = max(pos_score_arr)
-    game_state['score'] += max_score
+    if player == COMPUTER:
+        for col_idx in range(cols):
+            row_idx = game_state[col_idx]
+            if row_idx <= max_row_idx:
+                board[row_idx][col_idx] = token_dict[COMPUTER]
+                game_state[col_idx] += 1
+                game_state['holes_left'] -= 1
+                curr_score = position_score(board, game_state, row_idx, col_idx, max_row_idx, token_dict, player)
+                pos, score = minmax(board, game_state, token_dict, depth + 1, max_depth, HUMAN, row_idx, col_idx)
+                pos_score_arr[col_idx] = curr_score + score
+                # pos_score_arr[col_idx] = score - curr_score
 
-    all_zero = True
+                board[row_idx][col_idx] = 0
+                game_state[col_idx] -= 1
+                game_state['holes_left'] += 1
 
-    for i in range(len(pos_score_arr)):
-        if pos_score_arr[i] != 0:
-            all_zero = False
+                '''Performing Pruning for MAX node'''
+                if pos_score_arr[col_idx] >= beta:
+                    break
+                elif pos_score_arr[col_idx] > alpha:
+                    alpha = pos_score_arr[col_idx]
 
-    put_pos_idx = pos_score_arr.index(max_score)
+        max_score = max(pos_score_arr)
+        game_state['score'] += max_score
 
-    if all_zero:
-        return computer_player_turn_random(), game_state
-    return put_pos_idx, game_state
+        all_zero = True
+
+        for i in range(len(pos_score_arr)):
+            if pos_score_arr[i] != 0:
+                all_zero = False
+
+        put_pos_idx = pos_score_arr.index(max_score)
+
+        if all_zero:
+            return computer_player_turn_random(), max_score
+        return put_pos_idx, max_score
+        #     return computer_player_turn_random(), game_state
+        # return put_pos_idx, game_state
+
+    if player == HUMAN:
+        for col_idx in range(cols):
+            row_idx = game_state[col_idx]
+            if row_idx <= max_row_idx:
+                board[row_idx][col_idx] = token_dict[HUMAN]
+                game_state[col_idx] += 1
+                game_state['holes_left'] -= 1
+                curr_score = position_score(board, game_state, row_idx, col_idx, max_row_idx, token_dict, player)
+                pos, score = minmax(board, game_state, token_dict, depth + 1, max_depth, COMPUTER, row_idx, col_idx)
+                pos_score_arr[col_idx] = curr_score + score
+                # pos_score_arr[col_idx] = score - curr_score
+
+                board[row_idx][col_idx] = 0
+                game_state[col_idx] -= 1
+                game_state['holes_left'] += 1
+
+                '''Performing Pruning for MIN node'''
+                if pos_score_arr[col_idx] <= alpha:
+                    break
+                elif pos_score_arr[col_idx] < beta:
+                    beta = pos_score_arr[col_idx]
+
+        min_score = min(pos_score_arr)
+        game_state['score'] += min_score
+
+        all_zero = True
+
+        for i in range(len(pos_score_arr)):
+            if pos_score_arr[i] != 0:
+                all_zero = False
+
+        put_pos_idx = pos_score_arr.index(min_score)
+
+        if all_zero:
+            return computer_player_turn_random(), min_score
+        return put_pos_idx, min_score
+        #     return computer_player_turn_random(), game_state
+        # return put_pos_idx, game_state
 
 
 def interactive_mode():
@@ -162,10 +245,10 @@ def create_game_board(rows, columns, input_data):
 
     for c in range(columns):
         s = 0
-        for r in range(rows-1, -1, -1):
+        for r in range(rows - 1, -1, -1):
             data_point = int(input_data[r][c])
             if data_point != 0:
-                game_board[rows-1-r][c] = data_point
+                game_board[rows - 1 - r][c] = data_point
                 s += 1
             else:
                 total_zeros += 1
@@ -194,11 +277,11 @@ def one_move_mode():
 
             turn = 2
         if turn == 2:
-            computer_col = computer_player_turn(board, game_state, TOKEN_DICT)
+            computer_col, game_state = computer_player_turn(board, game_state, TOKEN_DICT)
             board, game_state, score_dict = update_board(board, game_state, COMPUTER, computer_col, score_dict)
             turn = 1
         display_game(board, score_dict)
-        p+=1
+        p += 1
 
     if score_dict[HUMAN] > score_dict[COMPUTER]:
         print('YOU WIN')
