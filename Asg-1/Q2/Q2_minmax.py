@@ -6,6 +6,7 @@ from game_rules_12 import *
 
 HUMAN = 'Human'
 COMPUTER = 'Computer'
+DIFFERENCE = 'Difference'
 TOKEN_DICT = {'Blank': 0, HUMAN: 1, COMPUTER: 2}
 
 
@@ -51,17 +52,18 @@ def computer_player_turn_random():
 
 
 def init_scores():
-    d = {'Human': 0, 'Computer': 0}
+    d = {HUMAN: 0, COMPUTER: 0, DIFFERENCE: 0}
     return d
 
 
-def update_board(board, game_state, player, chosen_col_idx, score_dict):
+def update_board(board, game_state, player, chosen_col_idx, score_dict, token_dict):
     max_row_idx = 5
 
-    if player == HUMAN:
-        token = 1
-    if player == COMPUTER:
-        token = 2
+    # if player == HUMAN:
+    #     token = 1
+    # if player == COMPUTER:
+    #     token = 2
+    token = token_dict[player]
 
     row_idx = game_state[chosen_col_idx]
 
@@ -72,6 +74,7 @@ def update_board(board, game_state, player, chosen_col_idx, score_dict):
 
         if score_tracking_connect_4(row_idx, chosen_col_idx, token, board):
             score_dict[player] += 1
+            score_dict[DIFFERENCE] = score_dict[COMPUTER] - score_dict[HUMAN]
     else:
         # if player == 'Human':
         #     print('Column =', chosen_col_idx + 1, 'is filled. Choose another col.')
@@ -82,12 +85,80 @@ def update_board(board, game_state, player, chosen_col_idx, score_dict):
         #     return update_board(board, game_state, 'Computer', computer_col, score_dict)
         if player == 'Human':
             computer_col = computer_player_turn_random()
-            return update_board(board, game_state, 'Computer', computer_col, score_dict)
+            return update_board(board, game_state, 'Computer', computer_col, score_dict, token_dict)
 
     return board, game_state, score_dict
 
 
-def computer_player_turn(board, game_state, token_dict):
+def computer_player_turn(board, game_state, token_dict, score_dict):
+    max_depth = 30
+    alpha, beta = -sys.maxsize, sys.maxsize
+
+    h_board = [[0] * 7 for i in range(6)]
+
+    for r in range(6):
+        for c in range(7):
+            h_board[r][c] = board[r][c]
+
+    h_game_state = game_state.copy()
+    h_score_dict = score_dict.copy()
+
+    value, idx = minmax(h_board, h_game_state, 0, max_depth, alpha, beta, COMPUTER, token_dict, h_score_dict)
+
+    return idx
+
+
+def minmax(h_board, h_game_state, depth, max_depth, alpha, beta, player, token_dict, h_score_dict):
+    rows, cols = len(h_board), len(h_board[0])
+
+    if depth == max_depth:
+        # -1 is just placeholder
+        return h_score_dict[DIFFERENCE], -1
+
+
+
+    ''' MAX Player '''
+    if player == COMPUTER:
+        all_points = [-sys.maxsize] * cols
+
+        for col_idx in range(cols):
+            h_board, h_game_state, h_score_dict = update_board(h_board, h_game_state, COMPUTER, col_idx, h_score_dict,
+                                                               token_dict)
+            point_diff, idx = minmax(h_board, h_game_state, depth + 1, max_depth, alpha, beta, HUMAN, token_dict,
+                                h_score_dict)
+            all_points[col_idx] = point_diff
+
+            '''Performing Pruning for MAX node'''
+            if point_diff >= beta:
+                break
+            elif point_diff > alpha:
+                alpha = point_diff
+
+        max_value = max(all_points)
+        return max_value, all_points.index(max_value)
+
+    ''' MIN Player '''
+    if player == HUMAN:
+        all_points = [sys.maxsize] * cols
+
+        for col_idx in range(cols):
+            h_board, h_game_state, h_score_dict = update_board(h_board, h_game_state, HUMAN, col_idx, h_score_dict,
+                                                               token_dict)
+            point_diff, idx = minmax(h_board, h_game_state, depth + 1, max_depth, alpha, beta, COMPUTER, token_dict,
+                                h_score_dict)
+            all_points[col_idx] = point_diff
+
+            '''Performing Pruning for MIN node'''
+            if point_diff <= alpha:
+                break
+            elif point_diff < beta:
+                beta = point_diff
+
+        min_value = min(all_points)
+        return min_value, all_points.index(min_value)
+
+
+def play_look_ahead_game(board, game_state, token_dict):
     rows, cols = len(board), len(board[0])
     max_row_idx = rows - 1
     pos_score_arr = [None] * cols
@@ -97,7 +168,7 @@ def computer_player_turn(board, game_state, token_dict):
         pos_score_arr[col_idx] = score
 
     max_score = max(pos_score_arr)
-    # game_state['score'] += max_score
+    game_state['score'] += max_score
 
     all_zero = True
 
@@ -108,8 +179,8 @@ def computer_player_turn(board, game_state, token_dict):
     put_pos_idx = pos_score_arr.index(max_score)
 
     if all_zero:
-        return computer_player_turn_random()
-    return put_pos_idx
+        return computer_player_turn_random(), game_state
+    return put_pos_idx, game_state
 
 
 def interactive_mode():
@@ -121,10 +192,10 @@ def interactive_mode():
     while game_state['holes_left'] > 0:
         human_col = human_player_turn()
         # human_col = computer_player_turn_random()  # for debug purpose
-        board, game_state, score_dict = update_board(board, game_state, HUMAN, human_col, score_dict)
+        board, game_state, score_dict = update_board(board, game_state, HUMAN, human_col, score_dict, TOKEN_DICT)
         # display_game(board)
-        computer_col = computer_player_turn(board, game_state, TOKEN_DICT)
-        board, game_state, score_dict = update_board(board, game_state, COMPUTER, computer_col, score_dict)
+        computer_col = computer_player_turn(board, game_state, TOKEN_DICT, score_dict)
+        board, game_state, score_dict = update_board(board, game_state, COMPUTER, computer_col, score_dict, TOKEN_DICT)
         display_game(board, score_dict)
 
     if score_dict[HUMAN] > score_dict[COMPUTER]:
@@ -162,10 +233,10 @@ def create_game_board(rows, columns, input_data):
 
     for c in range(columns):
         s = 0
-        for r in range(rows-1, -1, -1):
+        for r in range(rows - 1, -1, -1):
             data_point = int(input_data[r][c])
             if data_point != 0:
-                game_board[rows-1-r][c] = data_point
+                game_board[rows - 1 - r][c] = data_point
                 s += 1
             else:
                 total_zeros += 1
@@ -190,15 +261,16 @@ def one_move_mode():
         if turn == 1:
             human_col = human_player_turn()
             # human_col = computer_player_turn_random()  # for debug purpose
-            board, game_state, score_dict = update_board(board, game_state, HUMAN, human_col, score_dict)
+            board, game_state, score_dict = update_board(board, game_state, HUMAN, human_col, score_dict, TOKEN_DICT)
 
             turn = 2
         if turn == 2:
-            computer_col = computer_player_turn(board, game_state, TOKEN_DICT)
-            board, game_state, score_dict = update_board(board, game_state, COMPUTER, computer_col, score_dict)
+            computer_col = computer_player_turn(board, game_state, TOKEN_DICT, score_dict)
+            board, game_state, score_dict = update_board(board, game_state, COMPUTER, computer_col, score_dict,
+                                                         TOKEN_DICT)
             turn = 1
         display_game(board, score_dict)
-        p+=1
+        p += 1
 
     if score_dict[HUMAN] > score_dict[COMPUTER]:
         print('YOU WIN')
