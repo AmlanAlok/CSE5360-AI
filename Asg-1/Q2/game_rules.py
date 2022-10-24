@@ -4,8 +4,10 @@ import math as m
 HUMAN = 'Human'
 COMPUTER = 'Computer'
 SCORE_LINE_OF_2_1_SIDE = 2
+'''SCORE_LINE_OF_3_1_SIDE must be more than SCORE_LINE_OF_3_OPPONENT 
+to choose connect 3 of yours rather than stopping 3 of the opponent'''
 SCORE_LINE_OF_3_1_SIDE = 20
-SCORE_CONNECT_4 = 1000
+SCORE_CONNECT_4 = 5000
 SCORE_CENTER_COL = 4
 
 SCORE_LINE_OF_4_OPPONENT = 200
@@ -13,16 +15,16 @@ SCORE_LINE_OF_3_OPPONENT = 15
 SCORE_LINE_OF_2_OPPONENT = 2
 
 
-def score_calculation(r, c, token_dict, board, score, r_limit=6, c_limit=7):
+def score_calculation(r, c, token_dict, board, score, hypothetical_game_state, r_limit=6, c_limit=7, ):
     is_2, score_2 = line_of_2(r, c, token_dict[COMPUTER], board, SCORE_LINE_OF_2_1_SIDE)
-    is_3, score_3 = line_of_3(r, c, token_dict[COMPUTER], board, SCORE_LINE_OF_3_1_SIDE)
+    is_3, score_3 = line_of_3(r, c, token_dict[COMPUTER], board, SCORE_LINE_OF_3_1_SIDE, hypothetical_game_state)
     is_4, score_4 = connect_4(r, c, token_dict[COMPUTER], board, SCORE_CONNECT_4)
 
     # opponent_2, oppo_2 = line_of_2(r, c, token_dict[HUMAN], board, SCORE_LINE_OF_2_OPPONENT)
-    opponent_3, oppo_3 = line_of_3(r, c, token_dict[HUMAN], board, SCORE_LINE_OF_3_OPPONENT)
+    opponent_3, oppo_3 = line_of_3(r, c, token_dict[HUMAN], board, SCORE_LINE_OF_3_OPPONENT, hypothetical_game_state)
     opponent_4, oppo_4 = connect_4(r, c, token_dict[COMPUTER], board, SCORE_LINE_OF_4_OPPONENT)
 
-    if c == m.floor(c_limit/2):
+    if c == m.floor(c_limit / 2) and r == 0:
         score += SCORE_CENTER_COL
     if is_2:
         score += score_2
@@ -58,7 +60,7 @@ def position_score(board, game_state, chosen_col_idx, max_row_idx, token_dict):
 
         score = hypothetical_game_state['score']
 
-        add_score = score_calculation(row_idx, chosen_col_idx, token_dict, hypothetical_board, score)
+        add_score = score_calculation(row_idx, chosen_col_idx, token_dict, hypothetical_board, score, hypothetical_game_state)
         score += add_score
         # hypothetical_game_state['score'] = score
         return score
@@ -196,13 +198,13 @@ def horizontal_line_of_2(r, c, c_limit, token, board, score_2):
     return count == 2, score
 
 
-def line_of_3(r, c, token, board, score_3, count=0, r_limit=6, c_limit=7):
+def line_of_3(r, c, token, board, score_3, hypothetical_game_state, count=0, r_limit=6, c_limit=7):
     score = 0
 
-    h_3, h_score = horizontal_line_of_3(r, c, c_limit, token, board, score_3)
+    h_3, h_score = horizontal_line_of_3(r, c, c_limit, token, board, score_3, hypothetical_game_state)
     v_3, v_score = vertical_line_of_3(r, c, r_limit, token, board, score_3)
-    rd_3, rd_score = right_diagonal_line_of_3(r, c, r_limit, c_limit, token, board, score_3)
-    ld_3, ld_score = left_diagonal_line_of_3(r, c, r_limit, c_limit, token, board, score_3)
+    rd_3, rd_score = right_diagonal_line_of_3(r, c, r_limit, c_limit, token, board, score_3, hypothetical_game_state)
+    ld_3, ld_score = left_diagonal_line_of_3(r, c, r_limit, c_limit, token, board, score_3, hypothetical_game_state)
 
     if h_3:
         score += h_score
@@ -218,7 +220,7 @@ def line_of_3(r, c, token, board, score_3, count=0, r_limit=6, c_limit=7):
     return True, score
 
 
-def left_diagonal_line_of_3(r, c, r_limit, c_limit, token, board, score_3):
+def left_diagonal_line_of_3(r, c, r_limit, c_limit, token, board, score_3, hypothetical_game_state):
     count = 0
     score = 0
     i, j = r, c
@@ -247,7 +249,7 @@ def left_diagonal_line_of_3(r, c, r_limit, c_limit, token, board, score_3):
     return count == 3, score
 
 
-def right_diagonal_line_of_3(r, c, r_limit, c_limit, token, board, score_3):
+def right_diagonal_line_of_3(r, c, r_limit, c_limit, token, board, score_3, hypothetical_game_state):
     count = 0
     score = 0
     i, j = r, c
@@ -301,7 +303,7 @@ def vertical_line_of_3(r, c, r_limit, token, board, score_3):
     return count == 3, score
 
 
-def horizontal_line_of_3(r, c, c_limit, token, board, score_3):
+def horizontal_line_of_3(r, c, c_limit, token, board, score_3, hypothetical_game_state):
     count = 0
     score = 0
     i = c
@@ -451,3 +453,17 @@ def horizontal_count(r, c, c_limit, token, board, score_4):
             break
 
     return count >= 4, score_4
+
+
+def score_tracking_connect_4(r, c, token, board, score_4=SCORE_CONNECT_4, count=0, r_limit=6, c_limit=7):
+    if r < r_limit and c < c_limit and board[r][c] == token:
+        count += 1
+
+        horizontal, h_score = horizontal_count(r, c, c_limit, token, board, score_4)
+        vertical, v_score = vertical_count(r, c, r_limit, token, board, score_4)
+        left_diag, ld_score = left_diagonal(r, c, r_limit, c_limit, token, board, score_4)
+        right_diag, rd_score = right_diagonal(r, c, r_limit, c_limit, token, board, score_4)
+
+        return horizontal or vertical or left_diag or right_diag
+    else:
+        return False
