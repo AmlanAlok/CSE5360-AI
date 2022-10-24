@@ -3,6 +3,7 @@ import sys, os
 import math as m
 # from game_rules import *
 from game_rules_12 import *
+from score_1 import *
 
 HUMAN = 'Human'
 COMPUTER = 'Computer'
@@ -59,10 +60,6 @@ def init_scores():
 def update_board(board, game_state, player, chosen_col_idx, score_dict, token_dict):
     max_row_idx = 5
 
-    # if player == HUMAN:
-    #     token = 1
-    # if player == COMPUTER:
-    #     token = 2
     token = token_dict[player]
 
     row_idx = game_state[chosen_col_idx]
@@ -76,22 +73,22 @@ def update_board(board, game_state, player, chosen_col_idx, score_dict, token_di
             score_dict[player] += 1
             score_dict[DIFFERENCE] = score_dict[COMPUTER] - score_dict[HUMAN]
     else:
-        # if player == 'Human':
-        #     print('Column =', chosen_col_idx + 1, 'is filled. Choose another col.')
-        #     human_col = human_player_turn()
-        #     return update_board(board, game_state, 'Human', human_col, score_dict)
-        # elif player == 'Computer':
-        #     computer_col = computer_player_turn_random()
-        #     return update_board(board, game_state, 'Computer', computer_col, score_dict)
         if player == 'Human':
+            print('Column =', chosen_col_idx + 1, 'is filled. Choose another col.')
+            human_col = human_player_turn()
+            return update_board(board, game_state, 'Human', human_col, score_dict, token_dict)
+        elif player == 'Computer':
             computer_col = computer_player_turn_random()
             return update_board(board, game_state, 'Computer', computer_col, score_dict, token_dict)
+        # if player == 'Human':
+        #     computer_col = computer_player_turn_random()
+        #     return update_board(board, game_state, 'Computer', computer_col, score_dict, token_dict)
 
     return board, game_state, score_dict
 
 
 def computer_player_turn(board, game_state, token_dict, score_dict):
-    max_depth = 30
+    max_depth = 5
     alpha, beta = -sys.maxsize, sys.maxsize
 
     h_board = [[0] * 7 for i in range(6)]
@@ -114,7 +111,8 @@ def minmax(h_board, h_game_state, depth, max_depth, alpha, beta, player, token_d
     if depth == max_depth:
         # -1 is just placeholder
         return h_score_dict[DIFFERENCE], -1
-
+        # diff = countScore(h_board)
+        # return diff, -1
 
 
     ''' MAX Player '''
@@ -194,7 +192,8 @@ def interactive_mode():
         # human_col = computer_player_turn_random()  # for debug purpose
         board, game_state, score_dict = update_board(board, game_state, HUMAN, human_col, score_dict, TOKEN_DICT)
         # display_game(board)
-        computer_col = computer_player_turn(board, game_state, TOKEN_DICT, score_dict)
+        # computer_col = computer_player_turn(board, game_state, TOKEN_DICT, score_dict)
+        computer_col = play_look_ahead_game(board, game_state, TOKEN_DICT)
         board, game_state, score_dict = update_board(board, game_state, COMPUTER, computer_col, score_dict, TOKEN_DICT)
         display_game(board, score_dict)
 
