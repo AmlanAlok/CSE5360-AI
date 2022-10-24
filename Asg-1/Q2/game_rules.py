@@ -4,49 +4,64 @@ import math as m
 HUMAN = 'Human'
 COMPUTER = 'Computer'
 SCORE_LINE_OF_2_1_SIDE = 2
-SCORE_LINE_OF_3_1_SIDE = 5
+SCORE_LINE_OF_3_1_SIDE = 20
 SCORE_CONNECT_4 = 1000
 SCORE_CENTER_COL = 4
 
-SCORE_LINE_OF_3_OPPONENT = -100
-SCORE_LINE_OF_2_OPPONENT = -2
+SCORE_LINE_OF_4_OPPONENT = 200
+SCORE_LINE_OF_3_OPPONENT = 15
+SCORE_LINE_OF_2_OPPONENT = 2
 
 
 def score_calculation(r, c, token_dict, board, score, r_limit=6, c_limit=7):
-
     is_2, score_2 = line_of_2(r, c, token_dict[COMPUTER], board, SCORE_LINE_OF_2_1_SIDE)
     is_3, score_3 = line_of_3(r, c, token_dict[COMPUTER], board, SCORE_LINE_OF_3_1_SIDE)
-    is_4 = connect_4(r, c, token_dict[COMPUTER], board)
+    is_4, score_4 = connect_4(r, c, token_dict[COMPUTER], board, SCORE_CONNECT_4)
 
-    opponent_2, oppo_2 = line_of_2(r, c, token_dict[HUMAN], board, SCORE_LINE_OF_2_OPPONENT)
+    # opponent_2, oppo_2 = line_of_2(r, c, token_dict[HUMAN], board, SCORE_LINE_OF_2_OPPONENT)
     opponent_3, oppo_3 = line_of_3(r, c, token_dict[HUMAN], board, SCORE_LINE_OF_3_OPPONENT)
+    opponent_4, oppo_4 = connect_4(r, c, token_dict[COMPUTER], board, SCORE_LINE_OF_4_OPPONENT)
 
-    if c == m.floor(c_limit):
+    if c == m.floor(c_limit/2):
         score += SCORE_CENTER_COL
     if is_2:
         score += score_2
     if is_3:
         score += score_3
     if is_4:
-        score += SCORE_CONNECT_4
+        score += score_4
 
-    if oppo_2:
-        score -= oppo_2
-    if oppo_3:
-        score -= oppo_3
+    # if oppo_2:
+    #     score += oppo_2
+    if opponent_3:
+        score += oppo_3
+    if opponent_4:
+        score += oppo_4
+
+    return score
 
 
-def position_score(board, game_state, chosen_col_idx, max_row_idx, token):
+def position_score(board, game_state, chosen_col_idx, max_row_idx, token_dict):
     row_idx = game_state[chosen_col_idx]
+    hypothetical_board = [[0] * 7 for i in range(6)]
+
+    for r in range(6):
+        for c in range(7):
+            hypothetical_board[r][c] = board[r][c]
+
+    hypothetical_game_state = game_state.copy()
 
     if row_idx <= max_row_idx:
-        board[row_idx][chosen_col_idx] = token
-        game_state[chosen_col_idx] += 1
-        game_state['holes_left'] -= 1
+        hypothetical_board[row_idx][chosen_col_idx] = token_dict[COMPUTER]
+        hypothetical_game_state[chosen_col_idx] += 1
+        hypothetical_game_state['holes_left'] -= 1
 
-        score = game_state['score']
+        score = hypothetical_game_state['score']
 
-        score_calculation(row_idx, chosen_col_idx, token, board, score)
+        add_score = score_calculation(row_idx, chosen_col_idx, token_dict, hypothetical_board, score)
+        score += add_score
+        # hypothetical_game_state['score'] = score
+        return score
     else:
         return -sys.maxsize
 
@@ -317,21 +332,40 @@ Checks for 4 consecutive tokens along:
 '''
 
 
-def connect_4(r, c, token, board, count=0, r_limit=6, c_limit=7):
-    if r < r_limit and c < c_limit and board[r][c] == token:
-        count += 1
+def connect_4(r, c, token, board, score_4=SCORE_CONNECT_4, count=0, r_limit=6, c_limit=7):
+    # if r < r_limit and c < c_limit and board[r][c] == token:
+    #     count += 1
+    #
+    #     horizontal = horizontal_count(r, c, c_limit, token, board, score_4)
+    #     vertical = vertical_count(r, c, r_limit, token, board, score_4)
+    #     left_diag = left_diagonal(r, c, r_limit, c_limit, token, board, score_4)
+    #     right_diag = right_diagonal(r, c, r_limit, c_limit, token, board, score_4)
+    #
+    #     return horizontal or vertical or left_diag or right_diag
+    # else:
+    #     return False
+    score = 0
 
-        horizontal = horizontal_count(r, c, c_limit, token, board)
-        vertical = vertical_count(r, c, r_limit, token, board)
-        left_diag = left_diagonal(r, c, r_limit, c_limit, token, board)
-        right_diag = right_diagonal(r, c, r_limit, c_limit, token, board)
+    horizontal, h_score = horizontal_count(r, c, c_limit, token, board, score_4)
+    vertical, v_score = vertical_count(r, c, r_limit, token, board, score_4)
+    left_diag, ld_score = left_diagonal(r, c, r_limit, c_limit, token, board, score_4)
+    right_diag, rd_score = right_diagonal(r, c, r_limit, c_limit, token, board, score_4)
 
-        return horizontal or vertical or left_diag or right_diag
-    else:
-        return False
+    if horizontal:
+        score += h_score
+    if vertical:
+        score += v_score
+    if left_diag:
+        score += ld_score
+    if right_diag:
+        score += rd_score
+
+    if score == 0:
+        return False, 0
+    return True, score
 
 
-def left_diagonal(r, c, r_limit, c_limit, token, board):
+def left_diagonal(r, c, r_limit, c_limit, token, board, score_4):
     count = 0
     i, j = r, c
     while i < r_limit and 0 <= j:
@@ -352,10 +386,10 @@ def left_diagonal(r, c, r_limit, c_limit, token, board):
         else:
             break
 
-    return count >= 4
+    return count >= 4, score_4
 
 
-def right_diagonal(r, c, r_limit, c_limit, token, board):
+def right_diagonal(r, c, r_limit, c_limit, token, board, score_4):
     count = 0
     i, j = r, c
     while i < r_limit and j < c_limit:
@@ -376,10 +410,10 @@ def right_diagonal(r, c, r_limit, c_limit, token, board):
         else:
             break
 
-    return count >= 4
+    return count >= 4, score_4
 
 
-def vertical_count(r, c, r_limit, token, board):
+def vertical_count(r, c, r_limit, token, board, score_4):
     count = 0
     i = r
 
@@ -396,10 +430,10 @@ def vertical_count(r, c, r_limit, token, board):
             j -= 1
         else:
             break
-    return count >= 4
+    return count >= 4, score_4
 
 
-def horizontal_count(r, c, c_limit, token, board):
+def horizontal_count(r, c, c_limit, token, board, score_4):
     count = 0
     i = c
     while i < c_limit:
@@ -416,4 +450,4 @@ def horizontal_count(r, c, c_limit, token, board):
         else:
             break
 
-    return count >= 4
+    return count >= 4, score_4

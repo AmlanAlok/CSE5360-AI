@@ -7,6 +7,7 @@ HUMAN = 'Human'
 COMPUTER = 'Computer'
 TOKEN_DICT = {'Blank': 0, HUMAN: 1, COMPUTER: 2}
 
+
 def get_fresh_board(rows, columns):
     game_board = [[0] * columns for i in range(rows)]
 
@@ -69,28 +70,33 @@ def update_board(board, game_state, player, chosen_col_idx, score_dict):
         if connect_4(row_idx, chosen_col_idx, token, board):
             score_dict[player] += 1
     else:
+        # if player == 'Human':
+        #     print('Column =', chosen_col_idx + 1, 'is filled. Choose another col.')
+        #     human_col = human_player_turn()
+        #     return update_board(board, game_state, 'Human', human_col, score_dict)
+        # elif player == 'Computer':
+        #     computer_col = computer_player_turn_random()
+        #     return update_board(board, game_state, 'Computer', computer_col, score_dict)
         if player == 'Human':
-            print('Column =', chosen_col_idx + 1, 'is filled. Choose another col.')
-            human_col = human_player_turn()
-            return update_board(board, game_state, 'Human', human_col, score_dict)
-        elif player == 'Computer':
             computer_col = computer_player_turn_random()
             return update_board(board, game_state, 'Computer', computer_col, score_dict)
 
     return board, game_state, score_dict
 
 
-
-
 def computer_player_turn(board, game_state, token_dict):
     rows, cols = len(board), len(board[0])
-    max_row_idx = rows-1
+    max_row_idx = rows - 1
     pos_score_arr = [None] * cols
 
     for col_idx in range(cols):
         score = position_score(board, game_state, col_idx, max_row_idx, token_dict)
-        pos_score_arr.append(score)
+        pos_score_arr[col_idx] = score
     print('final')
+    max_score = max(pos_score_arr)
+    # game_state['score'] += max_score
+    put_pos_idx = pos_score_arr.index(max_score)
+    return put_pos_idx
 
 
 def main():
@@ -102,7 +108,7 @@ def main():
 
     while game_state['holes_left'] > 0:
         # human_col = human_player_turn()
-        human_col = 3  # for debug purpose
+        human_col = computer_player_turn_random()  # for debug purpose
         board, game_state, score_dict = update_board(board, game_state, HUMAN, human_col, score_dict)
         # display_game(board)
         computer_col = computer_player_turn(board, game_state, TOKEN_DICT)
