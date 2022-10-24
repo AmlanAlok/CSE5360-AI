@@ -97,7 +97,7 @@ def computer_player_turn(board, game_state, token_dict):
         pos_score_arr[col_idx] = score
 
     max_score = max(pos_score_arr)
-    # game_state['score'] += max_score
+    game_state['score'] += max_score
 
     all_zero = True
 
@@ -108,8 +108,8 @@ def computer_player_turn(board, game_state, token_dict):
     put_pos_idx = pos_score_arr.index(max_score)
 
     if all_zero:
-        return computer_player_turn_random()
-    return put_pos_idx
+        return computer_player_turn_random(), game_state
+    return put_pos_idx, game_state
 
 
 def interactive_mode():
@@ -123,7 +123,7 @@ def interactive_mode():
         # human_col = computer_player_turn_random()  # for debug purpose
         board, game_state, score_dict = update_board(board, game_state, HUMAN, human_col, score_dict)
         # display_game(board)
-        computer_col = computer_player_turn(board, game_state, TOKEN_DICT)
+        computer_col, game_state = computer_player_turn(board, game_state, TOKEN_DICT)
         board, game_state, score_dict = update_board(board, game_state, COMPUTER, computer_col, score_dict)
         display_game(board, score_dict)
 
@@ -194,7 +194,7 @@ def one_move_mode():
 
             turn = 2
         if turn == 2:
-            computer_col = computer_player_turn(board, game_state, TOKEN_DICT)
+            computer_col, game_state = computer_player_turn(board, game_state, TOKEN_DICT)
             board, game_state, score_dict = update_board(board, game_state, COMPUTER, computer_col, score_dict)
             turn = 1
         display_game(board, score_dict)
