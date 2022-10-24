@@ -67,7 +67,7 @@ def update_board(board, game_state, player, chosen_col_idx, score_dict):
         game_state[chosen_col_idx] += 1
         game_state['holes_left'] -= 1
 
-        if connect_4(row_idx, chosen_col_idx, token, board):
+        if score_tracking_connect_4(row_idx, chosen_col_idx, token, board):
             score_dict[player] += 1
     else:
         # if player == 'Human':
@@ -107,8 +107,8 @@ def main():
     display_game(board, score_dict)
 
     while game_state['holes_left'] > 0:
-        # human_col = human_player_turn()
-        human_col = computer_player_turn_random()  # for debug purpose
+        human_col = human_player_turn()
+        # human_col = computer_player_turn_random()  # for debug purpose
         board, game_state, score_dict = update_board(board, game_state, HUMAN, human_col, score_dict)
         # display_game(board)
         computer_col = computer_player_turn(board, game_state, TOKEN_DICT)
