@@ -35,7 +35,11 @@ def human_player_turn():
     print('YOUR TURN')
     col = int(input('Choose column between 1 to 7: \n'))
     col_idx = col - 1
-    return col_idx
+
+    if 0 <= col_idx <= 6:
+        return col_idx
+    else:
+        return human_player_turn()
 
 
 def computer_player_turn_random():
@@ -181,12 +185,12 @@ def minmax(board, game_state, token_dict, depth, max_depth, player, alpha, beta,
         return put_pos_idx, min_score
 
 
-def save_game_board(player, board):
-    filename = ''
-    if player == HUMAN:
-        filename = 'human.txt'
-    elif player == COMPUTER:
-        filename = 'computer.txt'
+def save_game_board(player, board, filename):
+
+    # if player == HUMAN:
+    #     filename = 'human.txt'
+    # elif player == COMPUTER:
+    #     filename = 'computer.txt'
 
     with open(filename, 'w') as f:
         for arr in reversed(board):
@@ -254,13 +258,13 @@ def interactive_mode(filename, next_player, depth_limit):
             # human_col = computer_player_turn_random()  # for debug purpose
             board, game_state, score_dict = update_board(board, game_state, HUMAN, human_col, score_dict)
             # display_game(board)
-            save_game_board(turn, board)
+            save_game_board(turn, board, 'human.txt')
             turn = COMPUTER
         if turn == COMPUTER:
             computer_col, game_state = computer_player_turn(board, game_state, TOKEN_DICT, depth_limit)
             board, game_state, score_dict = update_board(board, game_state, COMPUTER, computer_col, score_dict)
             display_game(board, score_dict)
-            save_game_board(turn, board)
+            save_game_board(turn, board, 'computer.txt')
             turn = HUMAN
 
     if score_dict[HUMAN] > score_dict[COMPUTER]:
@@ -313,35 +317,47 @@ def create_game_board(rows, columns, input_data):
     return game_board, game_state
 
 
-def one_move_mode():
-    filename = 'input3.txt'
+def one_move_mode(filename, output_file, depth_limit):
     input_data, next_player_token = read_input(filename)
     board, game_state = create_game_board(6, 7, input_data)
     score_dict = init_scores()
     display_game(board, score_dict)
 
-    turn = next_player_token
-    p = 0
-    while p < 2:
-        if turn == 1:
-            human_col = human_player_turn()
-            # human_col = computer_player_turn_random()  # for debug purpose
-            board, game_state, score_dict = update_board(board, game_state, HUMAN, human_col, score_dict)
+    if next_player_token == 1:
+        TOKEN_DICT[COMPUTER] = 1
+        TOKEN_DICT[HUMAN] = 2
+    elif next_player_token == 2:
+        TOKEN_DICT[COMPUTER] = 2
+        TOKEN_DICT[HUMAN] = 1
 
-            turn = 2
-        if turn == 2:
-            computer_col, game_state = computer_player_turn(board, game_state, TOKEN_DICT)
-            board, game_state, score_dict = update_board(board, game_state, COMPUTER, computer_col, score_dict)
-            turn = 1
-        display_game(board, score_dict)
-        p += 1
+    turn = COMPUTER
+    computer_col, game_state = computer_player_turn(board, game_state, TOKEN_DICT, depth_limit)
+    board, game_state, score_dict = update_board(board, game_state, COMPUTER, computer_col, score_dict)
+    display_game(board, score_dict)
+    save_game_board(turn, board, output_file)
 
-    if score_dict[HUMAN] > score_dict[COMPUTER]:
-        print('YOU WIN')
-    elif score_dict[HUMAN] < score_dict[COMPUTER]:
-        print('YOU LOSE')
-    else:
-        print('DRAW')
+
+    # p = 0
+    # while p < 2:
+    #     if turn == 1:
+    #         human_col = human_player_turn()
+    #         # human_col = computer_player_turn_random()  # for debug purpose
+    #         board, game_state, score_dict = update_board(board, game_state, HUMAN, human_col, score_dict)
+    #
+    #         turn = 2
+    #     if turn == 2:
+    #         computer_col, game_state = computer_player_turn(board, game_state, TOKEN_DICT)
+    #         board, game_state, score_dict = update_board(board, game_state, COMPUTER, computer_col, score_dict)
+    #         turn = 1
+    #     display_game(board, score_dict)
+    #     p += 1
+    #
+    # if score_dict[HUMAN] > score_dict[COMPUTER]:
+    #     print('YOU WIN')
+    # elif score_dict[HUMAN] < score_dict[COMPUTER]:
+    #     print('YOU LOSE')
+    # else:
+    #     print('DRAW')
     print('END')
 
 
@@ -351,13 +367,16 @@ def main():
 
     mode = sys.argv[1]
     input_filename = sys.argv[2]
-    next_player = sys.argv[3]
+
     depth_limit = int(sys.argv[4])
 
-    print(mode, input_filename, next_player, depth_limit)
-
     # one_move_mode()
-    interactive_mode(input_filename, next_player, depth_limit)
+    if mode == 'interactive':
+        next_player = sys.argv[3]
+        interactive_mode(input_filename, next_player, depth_limit)
+    if mode == 'one-move':
+        output_file = sys.argv[3]
+        one_move_mode(input_filename, output_file, depth_limit)
 
 
 if __name__ == "__main__":

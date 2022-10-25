@@ -26,10 +26,13 @@ Q4 How to run the code?
 
 One-Move Mode
 
-python3 maxconnect4.py one-move input1.txt output1.txt 5
+python3 maxconnect4.py one-move input1.txt output1.txt 2
 
 Interactive Mode
 
 python3 maxconnect4.py interactive input1.txt computer-next 5
 python3 maxconnect4.py interactive input1.txt human-next 5
+python3 maxconnect4.py interactive input1.txt computer-next 2
+python3 maxconnect4.py interactive input1.txt human-next 2
+
 

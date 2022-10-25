@@ -5,6 +5,7 @@ TO = 'to'
 FROM = 'from'
 DISTANCE = 'distance'
 FN = 'fn'
+GN = 'gn'
 
 
 def clean_data(line):
@@ -45,14 +46,16 @@ def organise_map(input_data):
     return d
 
 
-def add_successors_to_fringe(fringe, successors):
+def add_successors_to_fringe(fringe, successors, fringe_element):
     def key_col_value(t):
-        return t[DISTANCE]
+        # return t[DISTANCE]
+        return t[GN]
 
     for arr in successors:
         fringe.append({FROM: arr[2],
                        TO: arr[0],
-                       DISTANCE: arr[1]})
+                       DISTANCE: arr[1],
+                       GN: arr[1] + fringe_element[GN]})
 
     return deque(sorted(fringe, key=key_col_value))
 
@@ -78,7 +81,8 @@ def uniform_cost_search(origin, destination, map_dict):
     fringe = deque()
     fringe.append({FROM: '',
                    TO: origin,
-                   DISTANCE: 0.0})
+                   DISTANCE: 0.0,
+                   GN: 0.0})
 
     visited, route_traversed, expanded_arr = [], [], []
     popped, generated, expanded = 0, 1, 0
@@ -105,7 +109,7 @@ def uniform_cost_search(origin, destination, map_dict):
 
             successors = map_dict[current_location]
             generated += len(successors)
-            fringe = add_successors_to_fringe(fringe, successors)
+            fringe = add_successors_to_fringe(fringe, successors, fringe_element)
             expanded += 1
             expanded_arr.append(current_location)
 
@@ -200,12 +204,16 @@ def main():
     map_dict = organise_map(input_data)
 
     uniform_cost_search(origin, destination, map_dict)
+    print('----------')
+    origin = 'London'
+    destination = 'Kassel'
+    # uniform_cost_search(origin, destination, map_dict)
 
     heuristics_filename = 'h_kassel.txt'
     heuristics_data = read_input(heuristics_filename)
 
     heuristics_dict = organise_heuristics(heuristics_data)
-    a_start_search(origin, destination, map_dict, heuristics_dict)
+    # a_start_search(origin, destination, map_dict, heuristics_dict)
 
     # if len(sys.argv) == 4:
     #     '''Uninformed Search'''

@@ -1,8 +1,6 @@
 from random import randint
 import sys, os
-import math as m
-# from game_rules import *
-from game_rules_21 import *
+from game_rules import *
 
 HUMAN = 'Human'
 COMPUTER = 'Computer'
@@ -24,13 +22,11 @@ def get_fresh_board(rows, columns):
 
 
 def display_game(game, score_dict):
-    # print('--------------------\n')
     for arr in reversed(game):
         print(arr)
     print('============================')
     print(score_dict)
     print('============================')
-    # print('\n--------------------\n')
 
 
 def human_player_turn():
@@ -62,6 +58,7 @@ def update_board(board, game_state, player, chosen_col_idx, score_dict):
         token = 1
     if player == COMPUTER:
         token = 2
+    # token = TOKEN_DICT[player]
 
     row_idx = game_state[chosen_col_idx]
 
@@ -77,9 +74,9 @@ def update_board(board, game_state, player, chosen_col_idx, score_dict):
             print('Column =', chosen_col_idx + 1, 'is filled. Choose another col.')
             human_col = human_player_turn()
             return update_board(board, game_state, 'Human', human_col, score_dict)
-        elif player == 'Computer':
-            computer_col = computer_player_turn_random()
-            return update_board(board, game_state, 'Computer', computer_col, score_dict)
+        # elif player == 'Computer':
+        #     computer_col = computer_player_turn_random()
+        #     return update_board(board, game_state, 'Computer', computer_col, score_dict)
         # if player == 'Human':
         #     computer_col = computer_player_turn_random()
         #     return update_board(board, game_state, 'Computer', computer_col, score_dict)
@@ -87,8 +84,8 @@ def update_board(board, game_state, player, chosen_col_idx, score_dict):
     return board, game_state, score_dict
 
 
-def computer_player_turn(board, game_state, token_dict):
-    max_depth = 10
+def computer_player_turn(board, game_state, token_dict, max_depth):
+
     alpha, beta = -sys.maxsize, sys.maxsize
     hypothetical_board = [[0] * 7 for i in range(6)]
 
@@ -116,6 +113,7 @@ def minmax(board, game_state, token_dict, depth, max_depth, player, alpha, beta,
         # return -1, position_score(board, game_state, row_idx, col_idx, max_row_idx, token_dict, player)
         return -1, 0
 
+    ''' MAX Player '''
     if player == COMPUTER:
         for col_idx in range(cols):
             row_idx = game_state[col_idx]
@@ -155,6 +153,7 @@ def minmax(board, game_state, token_dict, depth, max_depth, player, alpha, beta,
         #     return computer_player_turn_random(), game_state
         # return put_pos_idx, game_state
 
+    ''' MIN Player '''
     if player == HUMAN:
         for col_idx in range(cols):
             row_idx = game_state[col_idx]
@@ -195,18 +194,45 @@ def minmax(board, game_state, token_dict, depth, max_depth, player, alpha, beta,
         # return put_pos_idx, game_state
 
 
-def interactive_mode():
-    board, game_state = get_fresh_board(6, 7)
-    print('New Game')
+def interactive_mode(filename, next_player, depth_limit):
+    print('Starting Game in Interactive Mode')
+    expected_token = -1
+    if os.path.exists(filename):
+        input_data, next_player_number = read_input(filename)
+        board, game_state = create_game_board(6, 7, input_data)
+
+        if next_player_number == 1:
+            expected_token = 1
+        elif next_player_number == 2:
+            expected_token = 2
+        else:
+            print(next_player_number, '- this number is not 1 or 2. Hence stopping program.')
+            exit(0)
+    else:
+        print('input file not found. Starting a fresh board.')
+        board, game_state = get_fresh_board(6, 7)
+
+    if expected_token != -1:
+        input_token = expected_token
+    if next_player == 'computer-next':
+        turn = COMPUTER
+    elif next_player == 'human-next':
+        turn = HUMAN
+    else:
+        print(next_player, '- this number is not computer-next/human-next. Hence stopping program.')
+        exit(0)
+
+
     score_dict = init_scores()
     display_game(board, score_dict)
 
+    print(turn)
     while game_state['holes_left'] > 0:
         human_col = human_player_turn()
         # human_col = computer_player_turn_random()  # for debug purpose
         board, game_state, score_dict = update_board(board, game_state, HUMAN, human_col, score_dict)
         # display_game(board)
-        computer_col, game_state = computer_player_turn(board, game_state, TOKEN_DICT)
+        computer_col, game_state = computer_player_turn(board, game_state, TOKEN_DICT, depth_limit)
         board, game_state, score_dict = update_board(board, game_state, COMPUTER, computer_col, score_dict)
         display_game(board, score_dict)
 
@@ -260,7 +286,7 @@ def create_game_board(rows, columns, input_data):
     return game_board, game_state
 
 
-def one_move_mode():
+def one_move_mode(depth_limit):
     filename = 'input3.txt'
     input_data, next_player_token = read_input(filename)
     board, game_state = create_game_board(6, 7, input_data)
@@ -277,7 +303,7 @@ def one_move_mode():
 
             turn = 2
         if turn == 2:
-            computer_col, game_state = computer_player_turn(board, game_state, TOKEN_DICT)
+            computer_col, game_state = computer_player_turn(board, game_state, TOKEN_DICT, depth_limit)
             board, game_state, score_dict = update_board(board, game_state, COMPUTER, computer_col, score_dict)
             turn = 1
         display_game(board, score_dict)
@@ -293,9 +319,18 @@ def one_move_mode():
 
 
 def main():
-    print('Q2 --')
+    print('START Task 2')
+    # print(sys.argv)
+
+    mode = sys.argv[1]
+    input_filename = sys.argv[2]
+    next_player = sys.argv[3]
+    depth_limit = sys.argv[4]
+
+    print(mode, input_filename, next_player, depth_limit)
+
     # one_move_mode()
-    interactive_mode()
+    interactive_mode(input_filename, next_player, depth_limit)
 
 
 if __name__ == "__main__":
