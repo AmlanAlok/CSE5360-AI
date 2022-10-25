@@ -4,8 +4,8 @@ from game_rules import *
 
 HUMAN = 'Human'
 COMPUTER = 'Computer'
-TOKEN_DICT = {'Blank': 0, HUMAN: 1, COMPUTER: 2}
-
+# TOKEN_DICT = {'Blank': 0, HUMAN: 1, COMPUTER: 2}
+TOKEN_DICT = {'Blank': 0, HUMAN: 2, COMPUTER: 1}
 
 def get_fresh_board(rows, columns):
     game_board = [[0] * columns for i in range(rows)]
@@ -22,11 +22,13 @@ def get_fresh_board(rows, columns):
 
 
 def display_game(game, score_dict):
+    # print('--------------------\n')
     for arr in reversed(game):
         print(arr)
     print('============================')
     print(score_dict)
     print('============================')
+    # print('\n--------------------\n')
 
 
 def human_player_turn():
@@ -54,11 +56,7 @@ def init_scores():
 def update_board(board, game_state, player, chosen_col_idx, score_dict):
     max_row_idx = 5
 
-    if player == HUMAN:
-        token = 1
-    if player == COMPUTER:
-        token = 2
-
+    token = TOKEN_DICT[player]
 
     row_idx = game_state[chosen_col_idx]
 
@@ -74,18 +72,12 @@ def update_board(board, game_state, player, chosen_col_idx, score_dict):
             print('Column =', chosen_col_idx + 1, 'is filled. Choose another col.')
             human_col = human_player_turn()
             return update_board(board, game_state, 'Human', human_col, score_dict)
-        elif player == 'Computer':
-            computer_col = computer_player_turn_random()
-            return update_board(board, game_state, 'Computer', computer_col, score_dict)
-        # if player == 'Human':
-        #     computer_col = computer_player_turn_random()
-        #     return update_board(board, game_state, 'Computer', computer_col, score_dict)
 
     return board, game_state, score_dict
 
 
-def computer_player_turn(board, game_state, token_dict):
-    max_depth = 2
+def computer_player_turn(board, game_state, token_dict, max_depth_program_input):
+
     alpha, beta = -sys.maxsize, sys.maxsize
     hypothetical_board = [[0] * 7 for i in range(6)]
 
@@ -95,7 +87,7 @@ def computer_player_turn(board, game_state, token_dict):
 
     hypothetical_game_state = game_state.copy()
 
-    best_pos, score = minmax(hypothetical_board, hypothetical_game_state, token_dict, 0, max_depth, COMPUTER, alpha,
+    best_pos, score = minmax(hypothetical_board, hypothetical_game_state, token_dict, 0, max_depth_program_input, COMPUTER, alpha,
                              beta)
     return best_pos, game_state
 
@@ -104,6 +96,7 @@ def computer_player_turn(board, game_state, token_dict):
 
 
 def minmax(board, game_state, token_dict, depth, max_depth, player, alpha, beta, row_idx=None, col_idx=None):
+
     rows, cols = len(board), len(board[0])
     max_row_idx = rows - 1
     pos_score_arr = [0] * cols
@@ -149,8 +142,6 @@ def minmax(board, game_state, token_dict, depth, max_depth, player, alpha, beta,
         if all_zero:
             return computer_player_turn_random(), max_score
         return put_pos_idx, max_score
-        #     return computer_player_turn_random(), game_state
-        # return put_pos_idx, game_state
 
     if player == HUMAN:
         for col_idx in range(cols):
@@ -188,13 +179,12 @@ def minmax(board, game_state, token_dict, depth, max_depth, player, alpha, beta,
         if all_zero:
             return computer_player_turn_random(), min_score
         return put_pos_idx, min_score
-        #     return computer_player_turn_random(), game_state
-        # return put_pos_idx, game_state
 
 
 def interactive_mode(filename, next_player, depth_limit):
     print('Starting Game in Interactive Mode')
     expected_token = -1
+
     if os.path.exists(filename):
         input_data, next_player_number = read_input(filename)
         board, game_state = create_game_board(6, 7, input_data)
@@ -210,8 +200,6 @@ def interactive_mode(filename, next_player, depth_limit):
         print('input file not found. Starting a fresh board.')
         board, game_state = get_fresh_board(6, 7)
 
-    if expected_token != -1:
-        input_token = expected_token
     if next_player == 'computer-next':
         turn = COMPUTER
     elif next_player == 'human-next':
@@ -220,19 +208,35 @@ def interactive_mode(filename, next_player, depth_limit):
         print(next_player, '- this number is not computer-next/human-next. Hence stopping program.')
         exit(0)
 
+    if expected_token != -1:
+        if turn == COMPUTER and expected_token == 1:
+            TOKEN_DICT[COMPUTER] = 1
+            TOKEN_DICT[HUMAN] = 2
+        elif turn == COMPUTER and expected_token == 2:
+            TOKEN_DICT[COMPUTER] = 2
+            TOKEN_DICT[HUMAN] = 1
+        elif turn == HUMAN and expected_token == 1:
+            TOKEN_DICT[HUMAN] = 1
+            TOKEN_DICT[COMPUTER] = 2
+        elif turn == HUMAN and expected_token == 2:
+            TOKEN_DICT[HUMAN] = 2
+            TOKEN_DICT[COMPUTER] = 1
 
     score_dict = init_scores()
     display_game(board, score_dict)
 
-    print(turn)
     while game_state['holes_left'] > 0:
-        human_col = human_player_turn()
-        # human_col = computer_player_turn_random()  # for debug purpose
-        board, game_state, score_dict = update_board(board, game_state, HUMAN, human_col, score_dict)
-        # display_game(board)
-        computer_col, game_state = computer_player_turn(board, game_state, TOKEN_DICT)
-        board, game_state, score_dict = update_board(board, game_state, COMPUTER, computer_col, score_dict)
-        display_game(board, score_dict)
+        if turn == HUMAN:
+            human_col = human_player_turn()
+            # human_col = computer_player_turn_random()  # for debug purpose
+            board, game_state, score_dict = update_board(board, game_state, HUMAN, human_col, score_dict)
+            # display_game(board)
+            turn = COMPUTER
+        if turn == COMPUTER:
+            computer_col, game_state = computer_player_turn(board, game_state, TOKEN_DICT, depth_limit)
+            board, game_state, score_dict = update_board(board, game_state, COMPUTER, computer_col, score_dict)
+            display_game(board, score_dict)
+            turn = HUMAN
 
     if score_dict[HUMAN] > score_dict[COMPUTER]:
         print('YOU WIN')
@@ -323,7 +327,7 @@ def main():
     mode = sys.argv[1]
     input_filename = sys.argv[2]
     next_player = sys.argv[3]
-    depth_limit = sys.argv[4]
+    depth_limit = int(sys.argv[4])
 
     print(mode, input_filename, next_player, depth_limit)
 
