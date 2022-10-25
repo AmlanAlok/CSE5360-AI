@@ -181,6 +181,25 @@ def minmax(board, game_state, token_dict, depth, max_depth, player, alpha, beta,
         return put_pos_idx, min_score
 
 
+def save_game_board(player, board):
+    filename = ''
+    if player == HUMAN:
+        filename = 'human.txt'
+    elif player == COMPUTER:
+        filename = 'computer.txt'
+
+    with open(filename, 'w') as f:
+        for arr in reversed(board):
+            for c in arr:
+                f.write(str(c))
+            f.write('\n')
+        if player == HUMAN:
+            f.write(str(TOKEN_DICT[COMPUTER]))
+        elif player == COMPUTER:
+            f.write(str(TOKEN_DICT[HUMAN]))
+        f.close()
+
+
 def interactive_mode(filename, next_player, depth_limit):
     print('Starting Game in Interactive Mode')
     expected_token = -1
@@ -225,17 +244,23 @@ def interactive_mode(filename, next_player, depth_limit):
     score_dict = init_scores()
     display_game(board, score_dict)
 
+    if game_state['holes_left'] == 0:
+        print('Board is full')
+        exit(0)
+
     while game_state['holes_left'] > 0:
         if turn == HUMAN:
             human_col = human_player_turn()
             # human_col = computer_player_turn_random()  # for debug purpose
             board, game_state, score_dict = update_board(board, game_state, HUMAN, human_col, score_dict)
             # display_game(board)
+            save_game_board(turn, board)
             turn = COMPUTER
         if turn == COMPUTER:
             computer_col, game_state = computer_player_turn(board, game_state, TOKEN_DICT, depth_limit)
             board, game_state, score_dict = update_board(board, game_state, COMPUTER, computer_col, score_dict)
             display_game(board, score_dict)
+            save_game_board(turn, board)
             turn = HUMAN
 
     if score_dict[HUMAN] > score_dict[COMPUTER]:
