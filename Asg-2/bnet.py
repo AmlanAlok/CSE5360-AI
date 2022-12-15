@@ -93,7 +93,6 @@ def get_value(x):
 
 
 def main():
-    # print('Hi')
     bn = BayesianNetwork()
     bn.burglary = get_value(sys.argv[1])
     bn.earthquake = get_value(sys.argv[2])
